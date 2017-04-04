@@ -7,18 +7,26 @@
 #include <osg/ref_ptr>
 #include <osgViewer/Viewer>
 #include <osg/MatrixTransform>
-//#include <vector>
 
-class KeyboardEventHandler : public osgGA::GUIEventHandler
+enum direction
+{
+  UP = 0,
+  LEFT = 1,
+  DOWN = 2,
+  RIGHT = 3
+};
+
+class ndCallback : public osg::NodeCallback
 {
 public:
-  virtual bool handle(const osgGA::GUIEventAdapter& ea, osgGA::GUIActionAdapter&);
+  void operator()(osg::Node*, osg::NodeVisitor*);
 };
 
 class tile : public osg::MatrixTransform
 {
 public:
   tile(int x, int y, int z, std::string texPath);
+  void setTexture(std::string texPath);
 private:
   osg::ref_ptr<osg::Geode> _geode;
   osg::ref_ptr<osg::Geometry> _geom;
@@ -30,17 +38,47 @@ private:
   osg::ref_ptr<osg::Texture2D> _texture;
 };
 
-class viewerThread : public QThread, public osg::Referenced
+class projectile : public tile
+{
+public:
+  projectile(int x, int y, int z, enum direction, std::string texPath);
+  direction _dir;
+  int _x;
+  int _z;
+};
+
+class tank : public osg::MatrixTransform
+{
+public:
+  tank(int x, int z, std::string texPath);
+  void moveTo(enum direction dir);
+  void shoot();
+private:
+  osg::ref_ptr<tile> _dl;
+  osg::ref_ptr<tile> _dr;
+  osg::ref_ptr<tile> _ul;
+  osg::ref_ptr<tile> _ur;
+  osg::ref_ptr<projectile> _projectile = nullptr;
+  int _x;
+  int _z;
+  direction _curDir = UP;
+  std::string _texDir = "UP";
+  std::string _texTankType;
+  std::string _texChassis = "_C1/";
+  osg::ref_ptr<ndCallback> _clb;
+};
+
+class viewerThread : public QThread, public osgGA::GUIEventHandler
 {
 public:
   viewerThread();
   osg::ref_ptr<osg::Group> createScene();
   osg::ref_ptr<osgViewer::Viewer> _viewer;
   void run() override;
+  virtual bool handle(const osgGA::GUIEventAdapter& ea, osgGA::GUIActionAdapter&);
 private:
   osg::ref_ptr<osg::Group> _scene;
-  std::vector<osg::ref_ptr<tile>> _tank;
-  KeyboardEventHandler* _keyHandler;
+  osg::ref_ptr<tank> _tank;
 };
 
 class game : public QWidget
