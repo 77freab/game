@@ -137,7 +137,10 @@ projectile::projectile(int x, int y, int z, direction dir, std::string texPath)
 
 void tank::shoot()
 {
-  _projectile = new projectile(_x, 0, _z, _curDir, "projectile/" + _texDir + ".png");
+  _projectile = new projectile(_x+4, 0, _z-4, _curDir, "projectile/" + _texDir + ".png");
+  _projectile->setName("main tank projectile");
+  this->getParent(0)->addChild(_projectile);
+  _projectile->setDataVariance(osg::Object::DYNAMIC);
   _projectile->setUpdateCallback(_clb);
 }
 
@@ -149,19 +152,23 @@ void ndCallback::operator()(osg::Node* nd, osg::NodeVisitor* ndv)
   {
     case(direction::UP) :
     {
-      prj->_z++;
+      prj->_z += 4;
+      break;
     }
     case(direction::DOWN) :
     {
-      prj->_z--;
+      prj->_z -= 4;
+      break;
     }
     case(direction::LEFT) :
     {
-      prj->_x--;
+      prj->_x -=4;
+      break;
     }
     case(direction::RIGHT) :
     {
-      prj->_x++;
+      prj->_x += 4;
+      break;
     }
   }
   mT.makeTranslate(prj->_x, 0, prj->_z);
@@ -172,9 +179,11 @@ void ndCallback::operator()(osg::Node* nd, osg::NodeVisitor* ndv)
 osg::ref_ptr<osg::Group> viewerThread::createScene()
 {
   osg::ref_ptr<osg::Group> scene = new osg::Group;
+  scene->setName("main scene");
   void createMap(osg::ref_ptr<osg::Group> scene);
   createMap(scene);
   _tank = new tank(0, 0, "yellow/T1_");
+  _tank->setName("main tank");
   scene->addChild(_tank);
   return scene;
 }
