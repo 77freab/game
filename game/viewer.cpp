@@ -75,8 +75,10 @@ tank::tank(int x, int z, std::string texTankType)
     _ul(new tile(  x, 0,   z, texTankType + "UP_C1/ul.png")),
     _ur(new tile(x+8, 0,   z, texTankType + "UP_C1/ur.png")),
     _x(x), _z(z), _texTankType(texTankType),
-    _clb(new ndCallback)
+    _clb(new tankCallback)
 {
+  this->setDataVariance(osg::Object::DYNAMIC);
+  this->setUpdateCallback(_clb);
   this->addChild(_dl);
   this->addChild(_dr);
   this->addChild(_ul);
@@ -85,18 +87,29 @@ tank::tank(int x, int z, std::string texTankType)
 
 void tank::moveTo(direction dir)
 {
+  _go = true;
+  _goDir = dir;
+}
+
+void tank::stop()
+{
+  _go = false;
+}
+
+void tank::move()
+{
   osg::Matrix mT;
-  if ((_curDir == dir) && (_curDir == UP))
+  if (_goDir == UP)
     _z++;
-  else if ((_curDir == dir) && (_curDir == DOWN))
+  else if (_goDir == DOWN)
     _z--;
-  else if ((_curDir == dir) && (_curDir == LEFT))
+  else if (_goDir == LEFT)
     _x--;
-  else if ((_curDir == dir) && (_curDir == RIGHT))
+  else if (_goDir == RIGHT)
     _x++;
-  else
+  if (_curDir != _goDir)
   {
-    switch (dir)
+    switch (_goDir)
     {
       case(UP) :
       {
@@ -119,21 +132,23 @@ void tank::moveTo(direction dir)
         break;
       }
     }
+    _curDir = _goDir; // новое текущее направление
   }
   dynamic_cast<tile*>(this->getChild(0))->setTexture(_texTankType + _texDir + _texChassis + "dl.png");
   dynamic_cast<tile*>(this->getChild(1))->setTexture(_texTankType + _texDir + _texChassis + "dr.png");
   dynamic_cast<tile*>(this->getChild(2))->setTexture(_texTankType + _texDir + _texChassis + "ul.png");
   dynamic_cast<tile*>(this->getChild(3))->setTexture(_texTankType + _texDir + _texChassis + "ur.png");
   _texChassis == "_C1/" ? _texChassis = "_C2/" : _texChassis = "_C1/"; // меняем тип шасси
-  _curDir = dir; // новое текущее направление
 
   mT.makeTranslate(_x, 0, _z);
   this->setMatrix(mT);
 }
 
 projectile::projectile(int x, int y, int z, direction dir, std::string texPath)
-  : tile(x, y, z, texPath), _dir(dir), _x(x), _z(z)
+  : tile(x, y, z, texPath), _dir(dir), _x(x), _z(z), _clb(new projectileCallback)
 {
+  this->setDataVariance(osg::Object::DYNAMIC);
+  this->setUpdateCallback(_clb);
   switch (_dir)
   {
     case(direction::UP) :
@@ -182,16 +197,22 @@ projectile::projectile(int x, int y, int z, direction dir, std::string texPath)
 void tank::shoot()
 {
   _projectile = new projectile(_x+4, 0, _z-4, _curDir, "projectile/" + _texDir + ".png");
-  _projectile->setName("main tank projectile");
   this->getParent(0)->addChild(_projectile);
-  _projectile->setDataVariance(osg::Object::DYNAMIC);
-  _projectile->setUpdateCallback(_clb);
+  _projectile->setName(this->getName() + " - projectile");
 }
 
-void ndCallback::operator()(osg::Node* nd, osg::NodeVisitor* ndv)
+void projectileCallback::operator()(osg::Node* nd, osg::NodeVisitor* ndv)
 {
   projectile* prj = dynamic_cast<projectile*>(nd);
   prj->move();
+  traverse(nd, ndv);
+}
+
+void tankCallback::operator()(osg::Node* nd, osg::NodeVisitor* ndv)
+{
+  tank* tnk = dynamic_cast<tank*>(nd);
+  if (tnk->_go)
+    tnk->move();
   traverse(nd, ndv);
 }
 
@@ -202,8 +223,8 @@ osg::ref_ptr<osg::Group> viewerThread::createScene()
   void createMap(osg::ref_ptr<osg::Group> scene);
   createMap(scene);
   _tank = new tank(0, 0, "yellow/T1_");
-  _tank->setName("main tank");
   scene->addChild(_tank);
+  _tank->setName(scene->getName() + " - main tank");
   return scene;
 }
 
@@ -213,23 +234,60 @@ bool viewerThread::handle(const osgGA::GUIEventAdapter& ea, osgGA::GUIActionAdap
   {
     case(osgGA::GUIEventAdapter::KEYDOWN) :
     {
-      if (ea.getKey() == 119) // W
-        _tank->moveTo(direction::UP);
-      if (ea.getKey() == 115) // S
-        _tank->moveTo(direction::DOWN);
-      if (ea.getKey() == 97) // A
-        _tank->moveTo(direction::LEFT);
-      if (ea.getKey() == 100) // D
-        _tank->moveTo(direction::RIGHT);
-      if (ea.getKey() == 32) // SPACE
-        _tank->shoot();
+      switch (ea.getKey())
+      {
+        case(119): // W
+        {
+          _pressedKeysFirstPlayer[119] = true;
+          _tank->moveTo(direction::UP);
+          break;
+        }
+        case(115) : // S
+        {
+          _pressedKeysFirstPlayer[115] = true;
+          _tank->moveTo(direction::DOWN);
+          break;
+        }
+        case(97) : // A
+        {
+          _pressedKeysFirstPlayer[97] = true;
+          _tank->moveTo(direction::LEFT);
+          break;
+        }
+        case(100) : // D
+        {
+          _pressedKeysFirstPlayer[100] = true;
+          _tank->moveTo(direction::RIGHT);
+          break;
+        }
+        case(32) : // SPACE
+        {
+          _tank->shoot();
+          break;
+        }
+      }
       return true;
     }
-    //case(osgGA::GUIEventAdapter::KEYUP) :
-    //{
-    //  //_keyboardModel->keyChange(ea.getKey(), ea.getUnmodifiedKey(), 0);
-    //  return true;
-    //}
+    case(osgGA::GUIEventAdapter::KEYUP) :
+    {
+      int key = ea.getKey();
+      switch (key)
+      {
+        case(119) : // W
+        case(115) : // S
+        case(97) : // A
+        case(100) : // D
+        {
+          _pressedKeysFirstPlayer[key] = false;
+          // если это была единственная нажатая клавиша то танк останавливается
+          if (!(_pressedKeysFirstPlayer[119] | _pressedKeysFirstPlayer[115] |
+            _pressedKeysFirstPlayer[97] | _pressedKeysFirstPlayer[100]))
+            _tank->stop();
+          break;
+        }
+      }
+      return true;
+    }
     default:
       return false;
   }
