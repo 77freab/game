@@ -133,7 +133,51 @@ void tank::moveTo(direction dir)
 
 projectile::projectile(int x, int y, int z, direction dir, std::string texPath)
   : tile(x, y, z, texPath), _dir(dir), _x(x), _z(z)
-{ }
+{
+  switch (_dir)
+  {
+    case(direction::UP) :
+    {
+      move = [this] 
+      { 
+        _z += 4; 
+        mT.makeTranslate(_x, 0, _z);
+        this->setMatrix(mT); 
+      };
+      break;
+    }
+    case(direction::DOWN) :
+    {
+      move = [this] 
+      { 
+        _z -= 4;
+        mT.makeTranslate(_x, 0, _z);
+        this->setMatrix(mT);
+      };
+      break;
+    }
+    case(direction::LEFT) :
+    {
+      move = [this] 
+      { 
+        _x -= 4;
+        mT.makeTranslate(_x, 0, _z);
+        this->setMatrix(mT);
+      };
+      break;
+    }
+    case(direction::RIGHT) :
+    {
+      move = [this] 
+      { 
+        _x += 4;
+        mT.makeTranslate(_x, 0, _z);
+        this->setMatrix(mT);
+      };
+      break;
+    }
+  }
+}
 
 void tank::shoot()
 {
@@ -147,32 +191,7 @@ void tank::shoot()
 void ndCallback::operator()(osg::Node* nd, osg::NodeVisitor* ndv)
 {
   projectile* prj = dynamic_cast<projectile*>(nd);
-  osg::Matrix mT;
-  switch (prj->_dir)
-  {
-    case(direction::UP) :
-    {
-      prj->_z += 4;
-      break;
-    }
-    case(direction::DOWN) :
-    {
-      prj->_z -= 4;
-      break;
-    }
-    case(direction::LEFT) :
-    {
-      prj->_x -=4;
-      break;
-    }
-    case(direction::RIGHT) :
-    {
-      prj->_x += 4;
-      break;
-    }
-  }
-  mT.makeTranslate(prj->_x, 0, prj->_z);
-  prj->setMatrix(mT);
+  prj->move();
   traverse(nd, ndv);
 }
 

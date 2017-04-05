@@ -7,6 +7,7 @@
 #include <osg/ref_ptr>
 #include <osgViewer/Viewer>
 #include <osg/MatrixTransform>
+#include <functional>
 
 enum direction
 {
@@ -42,7 +43,9 @@ class projectile : public tile
 {
 public:
   projectile(int x, int y, int z, enum direction, std::string texPath);
+  std::function<void()> move;
   direction _dir;
+  osg::Matrix mT;
   int _x;
   int _z;
 };
