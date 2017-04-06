@@ -1,4 +1,7 @@
 #include "tank.h"
+#include "createMap.h"
+
+extern std::map<osg::Vec2i, blockTypes> map;
 
 tank::tank(int x, int z, std::string texTankType)
   : _dl(new tile(x, 0, z, texTankType + "UP_C1/dl.png")),
@@ -37,15 +40,33 @@ void tank::stop()
 void tank::move()
 {
   osg::Matrix mT;
-
-  if ((_goDir == direction::UP) && (_x + 1))
+  osg::Vec2i collisionPt1, collisionPt2;
+  if (_goDir == direction::UP)
+  {
+    collisionPt1 = { _x + 1, _z + 16 };
+    collisionPt2 = { _x + 15, _z + 16 };
     _z++;
+  }
   else if (_goDir == direction::DOWN)
+  {
+    collisionPt1 = { _x + 1, _z };
+    collisionPt2 = { _x + 15, _z };
     _z--;
+  }
   else if (_goDir == direction::LEFT)
+  {
+    collisionPt1 = { _x, _z + 1 };
+    collisionPt2 = { _x, _z + 15 };
     _x--;
+  }
   else if (_goDir == direction::RIGHT)
+  {
+    collisionPt1 = { _x + 16, _z + 1 };
+    collisionPt2 = { _x + 16, _z + 15 };
     _x++;
+  }
+
+  //blockTypes a = map[{24, 16}];
 
   if (_curDir != _goDir)
   {

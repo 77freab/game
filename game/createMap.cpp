@@ -4,6 +4,8 @@
 const int MAP_X_SIZE = 32;
 const int MAP_Z_SIZE = 28;
 
+std::map<osg::Vec2i, blockTypes> map;
+
 void createMap(osg::ref_ptr<osg::Group> scene)
 {
   std::map<blockTypes, std::string> blockTex = {
@@ -13,8 +15,6 @@ void createMap(osg::ref_ptr<osg::Group> scene)
     { blockTypes::WATER, "blocks/WATER.png" },
     { blockTypes::BUSHES, "blocks/BUSHES.png" },
     { blockTypes::ICE, "blocks/ICE.png" } };
-
-  std::map<osg::Vec2i, blockTypes> map;
 
   for (int z = 24; z < 200; z += 8)
   {

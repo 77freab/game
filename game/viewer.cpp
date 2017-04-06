@@ -1,7 +1,4 @@
 #include "viewer.h"
-#include "createMap.h"
-
-extern std::map<osg::Vec2i, blockTypes> map;
 
 viewerThread::viewerThread()
   : _viewer(new osgViewer::Viewer)
