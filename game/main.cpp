@@ -1,4 +1,6 @@
-#include "game.h"
+#include "GUI.h"
+#include "viewer.h"
+#include <osg/ref_ptr>
 #include <QtWidgets/QApplication>
 
 int main(int argc, char *argv[])

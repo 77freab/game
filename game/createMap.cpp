@@ -1,113 +1,103 @@
-#include <game.h>
+#include "tile.h"
+#include <createMap.h>
+
+const int MAP_X_SIZE = 32;
+const int MAP_Z_SIZE = 28;
 
 void createMap(osg::ref_ptr<osg::Group> scene)
 {
-  for (int i = -80; i <= -32; i += 8)
+  std::map<blockTypes, std::string> blockTex = {
+    { blockTypes::BORDER, "blocks/BORDER.png" },
+    { blockTypes::BRICK, "blocks/BRICK.png" },
+    { blockTypes::ARMOR, "blocks/ARMOR.png" },
+    { blockTypes::WATER, "blocks/WATER.png" },
+    { blockTypes::BUSHES, "blocks/BUSHES.png" },
+    { blockTypes::ICE, "blocks/ICE.png" } };
+
+  std::map<osg::Vec2i, blockTypes> map;
+
+  for (int z = 24; z < 200; z += 8)
   {
-    scene->addChild(new tile(-80, 0, i, "blocks/brick.png"));
-    scene->addChild(new tile(-72, 0, i, "blocks/brick.png"));
+    if (z == 80)
+      z = 128;
+    map[{32, z}] = blockTypes::BRICK;
+    map[{40, z}] = blockTypes::BRICK;
 
-    scene->addChild(new tile(-48, 0, i, "blocks/brick.png"));
-    scene->addChild(new tile(-40, 0, i, "blocks/brick.png"));
+    map[{64, z}] = blockTypes::BRICK;
+    map[{72, z}] = blockTypes::BRICK;
 
-    scene->addChild(new tile(48, 0, i, "blocks/brick.png"));
-    scene->addChild(new tile(56, 0, i, "blocks/brick.png"));
+    map[{160, z}] = blockTypes::BRICK;
+    map[{168, z}] = blockTypes::BRICK;
 
-    scene->addChild(new tile(80, 0, i, "blocks/brick.png"));
-    scene->addChild(new tile(88, 0, i, "blocks/brick.png"));
+    map[{192, z}] = blockTypes::BRICK;
+    map[{200, z}] = blockTypes::BRICK;
   }
-  for (int i = -56; i <= -16; i += 8)
+  for (int z = 48; z < 200; z += 8)
   {
-    scene->addChild(new tile(-16, 0, i, "blocks/brick.png"));
-    scene->addChild(new tile(-8, 0, i, "blocks/brick.png"));
+    if (z == 96)
+      z = 112;
+    if (z == 128)
+      z = 144;
+    map[{96, z}] = blockTypes::BRICK;
+    map[{104, z}] = blockTypes::BRICK;
 
-    scene->addChild(new tile(16, 0, i, "blocks/brick.png"));
-    scene->addChild(new tile(24, 0, i, "blocks/brick.png"));
+    map[{128, z}] = blockTypes::BRICK;
+    map[{136, z}] = blockTypes::BRICK;
   }
-  for (int i = 24; i <= 88; i += 8)
+  for (int x = 48; x < 192; x += 8)
   {
-    scene->addChild(new tile(-80, 0, i, "blocks/brick.png"));
-    scene->addChild(new tile(-72, 0, i, "blocks/brick.png"));
-
-    scene->addChild(new tile(-48, 0, i, "blocks/brick.png"));
-    scene->addChild(new tile(-40, 0, i, "blocks/brick.png"));
-
-    scene->addChild(new tile(48, 0, i, "blocks/brick.png"));
-    scene->addChild(new tile(56, 0, i, "blocks/brick.png"));
-
-    scene->addChild(new tile(80, 0, i, "blocks/brick.png"));
-    scene->addChild(new tile(88, 0, i, "blocks/brick.png"));
+    if (x == 80)
+      x = 160;
+    map[{x, 96}] = blockTypes::BRICK;
+    map[{x, 104}] = blockTypes::BRICK;
   }
-  for (int i = 40; i <= 88; i += 8)
+  map[{16, 104}] = blockTypes::BRICK;
+  map[{24, 104}] = blockTypes::BRICK;
+  map[{16, 96}] = blockTypes::ARMOR;
+  map[{24, 96}] = blockTypes::ARMOR;
+
+  map[{208, 104}] = blockTypes::BRICK;
+  map[{216, 104}] = blockTypes::BRICK;
+  map[{208, 96}] = blockTypes::ARMOR;
+  map[{216, 96}] = blockTypes::ARMOR;
+
+  map[{112, 152}] = blockTypes::ARMOR;
+  map[{112, 160}] = blockTypes::ARMOR;
+  map[{120, 152}] = blockTypes::ARMOR;
+  map[{120, 160}] = blockTypes::ARMOR;
+
+  map[{112, 72}] = blockTypes::BRICK;
+  map[{112, 80}] = blockTypes::BRICK;
+  map[{120, 72}] = blockTypes::BRICK;
+  map[{120, 80}] = blockTypes::BRICK;
+
+  for (int z = 8; z < 32; z += 8)
   {
-    scene->addChild(new tile(-16, 0, i, "blocks/brick.png"));
-    scene->addChild(new tile(-8, 0, i, "blocks/brick.png"));
-
-    scene->addChild(new tile(16, 0, i, "blocks/brick.png"));
-    scene->addChild(new tile(24, 0, i, "blocks/brick.png"));
+    map[{104, z}] = blockTypes::BRICK;
+    map[{128, z}] = blockTypes::BRICK;
   }
-  for (int i = -64; i <= -40; i += 8)
-  {
-    scene->addChild(new tile(i, 0, 0, "blocks/brick.png"));
-    scene->addChild(new tile(i, 0, -8, "blocks/brick.png"));
-  }
-  for (int i = 48; i <= 72; i += 8)
-  {
-    scene->addChild(new tile(i, 0, 0, "blocks/brick.png"));
-    scene->addChild(new tile(i, 0, -8, "blocks/brick.png"));
-  }
-  scene->addChild(new tile(-96, 0, 0, "blocks/brick.png"));
-  scene->addChild(new tile(-88, 0, 0, "blocks/brick.png"));
-  scene->addChild(new tile(-96, 0, -8, "blocks/armor.png"));
-  scene->addChild(new tile(-88, 0, -8, "blocks/armor.png"));
-
-  scene->addChild(new tile(96, 0, 0, "blocks/brick.png"));
-  scene->addChild(new tile(104, 0, 0, "blocks/brick.png"));
-  scene->addChild(new tile(96, 0, -8, "blocks/armor.png"));
-  scene->addChild(new tile(104, 0, -8, "blocks/armor.png"));
-
-  scene->addChild(new tile(0, 0, 48, "blocks/armor.png"));
-  scene->addChild(new tile(0, 0, 56, "blocks/armor.png"));
-  scene->addChild(new tile(8, 0, 48, "blocks/armor.png"));
-  scene->addChild(new tile(8, 0, 56, "blocks/armor.png"));
-
-  scene->addChild(new tile(-16, 0, 8, "blocks/brick.png"));
-  scene->addChild(new tile(-16, 0, 16, "blocks/brick.png"));
-  scene->addChild(new tile(-8, 0, 8, "blocks/brick.png"));
-  scene->addChild(new tile(-8, 0, 16, "blocks/brick.png"));
-
-  scene->addChild(new tile(16, 0, 8, "blocks/brick.png"));
-  scene->addChild(new tile(16, 0, 16, "blocks/brick.png"));
-  scene->addChild(new tile(24, 0, 8, "blocks/brick.png"));
-  scene->addChild(new tile(24, 0, 16, "blocks/brick.png"));
-
-  scene->addChild(new tile(0, 0, -32, "blocks/brick.png"));
-  scene->addChild(new tile(0, 0, -24, "blocks/brick.png"));
-  scene->addChild(new tile(8, 0, -32, "blocks/brick.png"));
-  scene->addChild(new tile(8, 0, -24, "blocks/brick.png"));
-
-  for (int i = -96; i <= -80; i += 8)
-  {
-    scene->addChild(new tile(-8, 0, i, "blocks/brick.png"));
-    scene->addChild(new tile(16, 0, i, "blocks/brick.png"));
-  }
-  scene->addChild(new tile(0, 0, -80, "blocks/brick.png"));
-  scene->addChild(new tile(8, 0, -80, "blocks/brick.png"));
+  map[{112, 24}] = blockTypes::BRICK;
+  map[{120, 24}] = blockTypes::BRICK;
   
   // border
-  for (int i = -112; i <= 136; i += 8)
+  for (int x = 16; x < 224; x += 8)
   {
-    scene->addChild(new tile(i, 0, 112, "blocks/grey.png"));
-    scene->addChild(new tile(i, 0, -104, "blocks/grey.png"));
+    map[{x, 0}] = blockTypes::BORDER; // низ
+    map[{x, 216}] = blockTypes::BORDER; // верх
   }
-  for (int i = -96; i <= 104; i += 8)
+  for (int z = 0; z < 224; z += 8)
   {
-    scene->addChild(new tile(-112, 0, i, "blocks/grey.png"));
-    scene->addChild(new tile(-104, 0, i, "blocks/grey.png"));
+    map[{0, z}] = blockTypes::BORDER; // слева
+    map[{8, z}] = blockTypes::BORDER;
 
-    scene->addChild(new tile(112, 0, i, "blocks/grey.png"));
-    scene->addChild(new tile(120, 0, i, "blocks/grey.png"));
-    scene->addChild(new tile(128, 0, i, "blocks/grey.png"));
-    scene->addChild(new tile(136, 0, i, "blocks/grey.png"));
+    map[{224, z}] = blockTypes::BORDER; // справа
+    map[{232, z}] = blockTypes::BORDER;
+    map[{240, z}] = blockTypes::BORDER;
+    map[{248, z}] = blockTypes::BORDER;
   }
+
+  for (int x = 0; x < MAP_X_SIZE * 8; x += 8)
+    for (int z = 0; z < MAP_Z_SIZE * 8; z += 8)
+      if ( map.find({x, z}) != map.end() )
+        scene->addChild(new tile(x, 0, z, blockTex[map[{x, z}]]));
 }

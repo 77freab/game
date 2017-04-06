@@ -1,4 +1,4 @@
-#include "game.h"
+#include "GUI.h"
 
 game::game(QWidget *parent)
   : QWidget(parent)
