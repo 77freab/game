@@ -1,4 +1,4 @@
-enum class blockTypes
+enum class blockType
 {
   BORDER = 0,
   BRICK = 1,

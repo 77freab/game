@@ -8,3 +8,8 @@ game::game(QWidget *parent)
   _vLayout->addWidget(_btn);
   this->setLayout(_vLayout);
 }
+
+game::~game()
+{
+  emit closeViewer();
+}

@@ -15,6 +15,12 @@ viewerThread::viewerThread()
 void viewerThread::run()
 {
   _viewer->run();
+  emit closeGUI();
+}
+
+void viewerThread::close()
+{
+  _viewer->setDone(true);
 }
 
 osg::ref_ptr<osg::Group> viewerThread::createScene()

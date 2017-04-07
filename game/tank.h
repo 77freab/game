@@ -53,6 +53,8 @@ private:
   osg::ref_ptr<tile> _ul;
   osg::ref_ptr<tile> _ur;
   osg::ref_ptr<projectile> _projectile = nullptr;
+  std::map<direction, osg::Vec2i> _collisionPt1;
+  std::map<direction, osg::Vec2i> _collisionPt2;
   const int _x0;
   const int _z0;
   int _x;

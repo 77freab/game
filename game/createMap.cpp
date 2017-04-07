@@ -4,100 +4,98 @@
 const int MAP_X_SIZE = 32;
 const int MAP_Z_SIZE = 28;
 
-std::map<osg::Vec2i, blockTypes> map;
+std::map<osg::Vec2i, blockType> map;
 
 void createMap(osg::ref_ptr<osg::Group> scene)
 {
-  std::map<blockTypes, std::string> blockTex = {
-    { blockTypes::BORDER, "blocks/BORDER.png" },
-    { blockTypes::BRICK, "blocks/BRICK.png" },
-    { blockTypes::ARMOR, "blocks/ARMOR.png" },
-    { blockTypes::WATER, "blocks/WATER.png" },
-    { blockTypes::BUSHES, "blocks/BUSHES.png" },
-    { blockTypes::ICE, "blocks/ICE.png" } };
+  std::map<blockType, std::string> blockTex = {
+    { blockType::BORDER, "blocks/BORDER.png" },
+    { blockType::BRICK, "blocks/BRICK.png" },
+    { blockType::ARMOR, "blocks/ARMOR.png" },
+    { blockType::WATER, "blocks/WATER.png" },
+    { blockType::BUSHES, "blocks/BUSHES.png" },
+    { blockType::ICE, "blocks/ICE.png" } };
 
-  for (int z = 24; z < 200; z += 8)
+  for (int z = 3; z < 25; z++)
   {
-    if (z == 80)
-      z = 128;
-    map[{32, z}] = blockTypes::BRICK;
-    map[{40, z}] = blockTypes::BRICK;
+    if (z == 10)
+      z = 16;
+    map[{4, z}] = blockType::BRICK;
+    map[{5, z}] = blockType::BRICK;
 
-    map[{64, z}] = blockTypes::BRICK;
-    map[{72, z}] = blockTypes::BRICK;
+    map[{8, z}] = blockType::BRICK;
+    map[{9, z}] = blockType::BRICK;
 
-    map[{160, z}] = blockTypes::BRICK;
-    map[{168, z}] = blockTypes::BRICK;
+    map[{20, z}] = blockType::BRICK;
+    map[{21, z}] = blockType::BRICK;
 
-    map[{192, z}] = blockTypes::BRICK;
-    map[{200, z}] = blockTypes::BRICK;
+    map[{24, z}] = blockType::BRICK;
+    map[{25, z}] = blockType::BRICK;
   }
-  for (int z = 48; z < 200; z += 8)
+  for (int z = 6; z < 25; z++)
   {
-    if (z == 96)
-      z = 112;
-    if (z == 128)
-      z = 144;
-    map[{96, z}] = blockTypes::BRICK;
-    map[{104, z}] = blockTypes::BRICK;
+    if (z == 12)
+      z = 14;
+    if (z == 16)
+      z = 18;
+    map[{12, z}] = blockType::BRICK;
+    map[{13, z}] = blockType::BRICK;
 
-    map[{128, z}] = blockTypes::BRICK;
-    map[{136, z}] = blockTypes::BRICK;
+    map[{16, z}] = blockType::BRICK;
+    map[{17, z}] = blockType::BRICK;
   }
-  for (int x = 48; x < 192; x += 8)
+  for (int x = 6; x < 24; x++)
   {
-    if (x == 80)
-      x = 160;
-    map[{x, 96}] = blockTypes::BRICK;
-    map[{x, 104}] = blockTypes::BRICK;
+    if (x == 10)
+      x = 20;
+    map[{x, 12}] = blockType::BRICK;
+    map[{x, 13}] = blockType::BRICK;
   }
-  map[{16, 104}] = blockTypes::BRICK;
-  map[{24, 104}] = blockTypes::BRICK;
-  map[{16, 96}] = blockTypes::ARMOR;
-  map[{24, 96}] = blockTypes::ARMOR;
+  map[{2, 13}] = blockType::BRICK;
+  map[{3, 13}] = blockType::BRICK;
+  map[{2, 12}] = blockType::ARMOR;
+  map[{3, 12}] = blockType::ARMOR;
 
-  map[{208, 104}] = blockTypes::BRICK;
-  map[{216, 104}] = blockTypes::BRICK;
-  map[{208, 96}] = blockTypes::ARMOR;
-  map[{216, 96}] = blockTypes::ARMOR;
+  map[{26, 13}] = blockType::BRICK;
+  map[{27, 13}] = blockType::BRICK;
+  map[{26, 12}] = blockType::ARMOR;
+  map[{27, 12}] = blockType::ARMOR;
 
-  map[{112, 152}] = blockTypes::ARMOR;
-  map[{112, 160}] = blockTypes::ARMOR;
-  map[{120, 152}] = blockTypes::ARMOR;
-  map[{120, 160}] = blockTypes::ARMOR;
+  map[{14, 19}] = blockType::ARMOR;
+  map[{14, 20}] = blockType::ARMOR;
+  map[{15, 19}] = blockType::ARMOR;
+  map[{15, 20}] = blockType::ARMOR;
 
-  map[{112, 72}] = blockTypes::BRICK;
-  map[{112, 80}] = blockTypes::BRICK;
-  map[{120, 72}] = blockTypes::BRICK;
-  map[{120, 80}] = blockTypes::BRICK;
+  map[{14, 9}] = blockType::BRICK;
+  map[{14, 10}] = blockType::BRICK;
+  map[{15, 9}] = blockType::BRICK;
+  map[{15, 10}] = blockType::BRICK;
 
-  for (int z = 8; z < 32; z += 8)
+  for (int z = 1; z < 4; z++)
   {
-    map[{104, z}] = blockTypes::BRICK;
-    map[{128, z}] = blockTypes::BRICK;
+    map[{13, z}] = blockType::BRICK;
+    map[{16, z}] = blockType::BRICK;
   }
-  map[{112, 24}] = blockTypes::BRICK;
-  map[{120, 24}] = blockTypes::BRICK;
+  map[{14, 3}] = blockType::BRICK;
+  map[{15, 3}] = blockType::BRICK;
   
   // border
-  for (int x = 16; x < 224; x += 8)
+  for (int x = 2; x < 28; x++)
   {
-    map[{x, 0}] = blockTypes::BORDER; // низ
-    map[{x, 216}] = blockTypes::BORDER; // верх
+    map[{x, 0}] = blockType::BORDER; // низ
+    map[{x, 27}] = blockType::BORDER; // верх
   }
-  for (int z = 0; z < 224; z += 8)
+  for (int z = 0; z < 28; z++)
   {
-    map[{0, z}] = blockTypes::BORDER; // слева
-    map[{8, z}] = blockTypes::BORDER;
+    map[{0, z}] = blockType::BORDER; // слева
+    map[{1, z}] = blockType::BORDER;
 
-    map[{224, z}] = blockTypes::BORDER; // справа
-    map[{232, z}] = blockTypes::BORDER;
-    map[{240, z}] = blockTypes::BORDER;
-    map[{248, z}] = blockTypes::BORDER;
+    for (int x = 28; x < 32; x++)
+      map[{x, z}] = blockType::BORDER; // справа
   }
 
-  for (int x = 0; x < MAP_X_SIZE * 8; x += 8)
-    for (int z = 0; z < MAP_Z_SIZE * 8; z += 8)
+  for (int x = 0; x < MAP_X_SIZE; x++)
+    for (int z = 0; z < MAP_Z_SIZE; z++)
       if ( map.find({x, z}) != map.end() )
-        scene->addChild(new tile(x, 0, z, blockTex[map[{x, z}]]));
+        scene->addChild(new tile(x * 8, 0, z * 8, blockTex[map[{x, z}]]));
 }

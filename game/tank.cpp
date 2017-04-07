@@ -1,7 +1,9 @@
 #include "tank.h"
 #include "createMap.h"
+#include <osg/Array>
+#include <cmath>
 
-extern std::map<osg::Vec2i, blockTypes> map;
+extern std::map<osg::Vec2i, blockType> map;
 
 tank::tank(int x, int z, std::string texTankType)
   : _dl(new tile(x, 0, z, texTankType + "UP_C1/dl.png")),
@@ -39,59 +41,79 @@ void tank::stop()
 
 void tank::move()
 {
-  osg::Matrix mT;
-  osg::Vec2i collisionPt1, collisionPt2;
-  if (_goDir == direction::UP)
-  {
-    collisionPt1 = { _x + 1, _z + 16 };
-    collisionPt2 = { _x + 15, _z + 16 };
-    _z++;
-  }
-  else if (_goDir == direction::DOWN)
-  {
-    collisionPt1 = { _x + 1, _z };
-    collisionPt2 = { _x + 15, _z };
-    _z--;
-  }
-  else if (_goDir == direction::LEFT)
-  {
-    collisionPt1 = { _x, _z + 1 };
-    collisionPt2 = { _x, _z + 15 };
-    _x--;
-  }
-  else if (_goDir == direction::RIGHT)
-  {
-    collisionPt1 = { _x + 16, _z + 1 };
-    collisionPt2 = { _x + 16, _z + 15 };
-    _x++;
-  }
+  _collisionPt1[direction::UP] = 
+  { (_x) / 8, (_z + 16) / 8 };
+  _collisionPt2[direction::UP] = 
+  { static_cast<int>(ceil((_x + 7) / 8.)), (_z + 16) / 8 };
 
-  //blockTypes a = map[{24, 16}];
+  _collisionPt1[direction::DOWN] = 
+  { (_x) / 8, (_z) / 8 };
+  _collisionPt2[direction::DOWN] = 
+  { static_cast<int>(ceil((_x + 7) / 8.)), (_z) / 8 };
+
+  _collisionPt1[direction::LEFT] = 
+  { (_x-1) / 8, (_z + 1) / 8 };
+  _collisionPt2[direction::LEFT] = 
+  { (_x-1) / 8, static_cast<int>(ceil((_z + 8) / 8.)) };
+
+  _collisionPt1[direction::RIGHT] = 
+  { (_x + 15) / 8, (_z + 1) / 8 };
+  _collisionPt2[direction::RIGHT] = 
+  { (_x + 15) / 8, static_cast<int>(ceil((_z + 8) / 8.)) };
+
+  std::map<osg::Vec2i, blockType>::const_iterator a, b;
+
+  //a = map.find(_collisionPt1[direction::UP]);
+  //auto aa = a != map.end();
+  //bool ee = false;
+  //if (aa)
+  //{
+  //  auto b = (*a).second == blockType::ICE;
+  //  auto c = (*a).second == blockType::BUSHES;
+  //  ee = false;
+  //}
+
+  if (((a = map.find(_collisionPt1[_goDir])) == map.end()) && ((b = map.find(_collisionPt2[_goDir])) == map.end()))
+  {
+    if (_goDir == direction::UP)
+      _z++;
+    if (_goDir == direction::DOWN)
+      _z--;
+    if (_goDir == direction::LEFT)
+      _x--;
+    if (_goDir == direction::RIGHT)
+      _x++;
+  }
+    
+
+  //if ((((*a).second == blockType::ICE) || ((*a).second == blockType::BUSHES)) && (((*b).second == blockType::ICE) || ((*b).second == blockType::BUSHES)))
+  //  _z++;
+
 
   if (_curDir != _goDir)
   {
     switch (_goDir)
     {
-    case(direction::UP) :
-    {
-      _texDir = "UP";
-      break;
-    }
-    case(direction::DOWN) :
-    {
-      _texDir = "DOWN";
-      break;
-    }
-    case(direction::LEFT) :
-    {
-      _texDir = "LEFT";
-      break;
-    }
-    case(direction::RIGHT) :
-    {
-      _texDir = "RIGHT";
-      break;
-    }
+      case(direction::UP) :
+      {
+        _texDir = "UP";
+        break;
+      }
+      case(direction::DOWN) :
+      {
+        _texDir = "DOWN";
+        break;
+      }
+      case(direction::LEFT) :
+      {
+        _texDir = "LEFT";
+        break;
+      }
+      case(direction::RIGHT) :
+      {
+        _texDir = "RIGHT";
+        break;
+      }
     }
     _curDir = _goDir; // новое текущее направление
   }
@@ -102,6 +124,7 @@ void tank::move()
 
   _texChassis == "_C1/" ? _texChassis = "_C2/" : _texChassis = "_C1/"; // меняем тип шасси
 
+  osg::Matrix mT;
   mT.makeTranslate(_x - _x0, 0, _z - _z0);
   this->setMatrix(mT);
 }
@@ -113,46 +136,46 @@ projectile::projectile(int x, int y, int z, direction dir, std::string texPath)
   this->setUpdateCallback(_clb);
   switch (_dir)
   {
-  case(direction::UP) :
-  {
-    move = [this]
+    case(direction::UP) :
     {
-      _z += 4;
-      mT.makeTranslate(_x, 0, _z);
-      this->setMatrix(mT);
-    };
-    break;
-  }
-  case(direction::DOWN) :
-  {
-    move = [this]
+      move = [this]
+      {
+        _z += 4;
+        mT.makeTranslate(_x, 0, _z);
+        this->setMatrix(mT);
+      };
+      break;
+    }
+    case(direction::DOWN) :
     {
-      _z -= 4;
-      mT.makeTranslate(_x, 0, _z);
-      this->setMatrix(mT);
-    };
-    break;
-  }
-  case(direction::LEFT) :
-  {
-    move = [this]
+      move = [this]
+      {
+        _z -= 4;
+        mT.makeTranslate(_x, 0, _z);
+        this->setMatrix(mT);
+      };
+      break;
+    }
+    case(direction::LEFT) :
     {
-      _x -= 4;
-      mT.makeTranslate(_x, 0, _z);
-      this->setMatrix(mT);
-    };
-    break;
-  }
-  case(direction::RIGHT) :
-  {
-    move = [this]
+      move = [this]
+      {
+        _x -= 4;
+        mT.makeTranslate(_x, 0, _z);
+        this->setMatrix(mT);
+      };
+      break;
+    }
+    case(direction::RIGHT) :
     {
-      _x += 4;
-      mT.makeTranslate(_x, 0, _z);
-      this->setMatrix(mT);
-    };
-    break;
-  }
+      move = [this]
+      {
+        _x += 4;
+        mT.makeTranslate(_x, 0, _z);
+        this->setMatrix(mT);
+      };
+      break;
+    }
   }
 }
 
