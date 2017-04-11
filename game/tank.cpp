@@ -1,9 +1,12 @@
 #include "tank.h"
 #include "createMap.h"
 #include <osg/Array>
+#include <osg/Switch>
 #include <cmath>
 
 extern std::map<osg::Vec2i, blockType> map;
+extern std::map<osg::Vec2i, tile*> tileMap;
+extern std::list<osg::Node*> toDelete;
 
 tank::tank(int x, int z, std::string texTankType)
   : _dl(new tile(x, 0, z, texTankType + "UP_C1/dl.png")),
@@ -21,13 +24,6 @@ tank::tank(int x, int z, std::string texTankType)
   this->addChild(_ur);
 }
 
-void tank::shoot()
-{
-  _projectile = new projectile(_x + 4, 0, _z + 4, _curDir, "projectile/" + _texDir + ".png");
-  this->getParent(0)->addChild(_projectile);
-  _projectile->setName(this->getName() + " - projectile");
-}
-
 void tank::moveTo(direction dir)
 {
   _go = true;
@@ -41,39 +37,37 @@ void tank::stop()
 
 void tank::move()
 {
-  _collisionPt1[direction::UP] = 
-  { (_x) / 8, (_z + 16) / 8 };
-  _collisionPt2[direction::UP] = 
-  { static_cast<int>(ceil((_x + 7) / 8.)), (_z + 16) / 8 };
-
-  _collisionPt1[direction::DOWN] = 
-  { (_x) / 8, (_z) / 8 };
-  _collisionPt2[direction::DOWN] = 
-  { static_cast<int>(ceil((_x + 7) / 8.)), (_z) / 8 };
-
-  _collisionPt1[direction::LEFT] = 
-  { (_x-1) / 8, (_z + 1) / 8 };
-  _collisionPt2[direction::LEFT] = 
-  { (_x-1) / 8, static_cast<int>(ceil((_z + 8) / 8.)) };
-
-  _collisionPt1[direction::RIGHT] = 
-  { (_x + 15) / 8, (_z + 1) / 8 };
-  _collisionPt2[direction::RIGHT] = 
-  { (_x + 15) / 8, static_cast<int>(ceil((_z + 8) / 8.)) };
+  switch (_goDir)
+  {
+    case(direction::UP) :
+    {
+      _collisionPt1 = { (_x) / 8, (_z + 16) / 8 };
+      _collisionPt2 = { static_cast<int>(ceil((_x + 7) / 8.)), (_z + 16) / 8 };
+      break;
+    }
+    case(direction::DOWN) :
+    {
+      _collisionPt1 = { (_x) / 8, (_z) / 8 };
+      _collisionPt2 = { static_cast<int>(ceil((_x + 7) / 8.)), (_z) / 8 };
+      break;
+    }
+    case(direction::LEFT) :
+    {
+      _collisionPt1 = { (_x - 1) / 8, (_z + 1) / 8 };
+      _collisionPt2 = { (_x - 1) / 8, static_cast<int>(ceil((_z + 8) / 8.)) };
+      break;
+    }
+    case(direction::RIGHT) :
+    {
+      _collisionPt1 = { (_x + 15) / 8, (_z + 1) / 8 };
+      _collisionPt2 = { (_x + 15) / 8, static_cast<int>(ceil((_z + 8) / 8.)) };
+      break;
+    }
+  }
 
   std::map<osg::Vec2i, blockType>::const_iterator a, b;
 
-  //a = map.find(_collisionPt1[direction::UP]);
-  //auto aa = a != map.end();
-  //bool ee = false;
-  //if (aa)
-  //{
-  //  auto b = (*a).second == blockType::ICE;
-  //  auto c = (*a).second == blockType::BUSHES;
-  //  ee = false;
-  //}
-
-  if (((a = map.find(_collisionPt1[_goDir])) == map.end()) && ((b = map.find(_collisionPt2[_goDir])) == map.end()))
+  if (((a = map.find(_collisionPt1)) == map.end()) && ((b = map.find(_collisionPt2)) == map.end()))
   {
     if (_goDir == direction::UP)
       _z++;
@@ -84,7 +78,7 @@ void tank::move()
     if (_goDir == direction::RIGHT)
       _x++;
   }
-    
+  
 
   //if ((((*a).second == blockType::ICE) || ((*a).second == blockType::BUSHES)) && (((*b).second == blockType::ICE) || ((*b).second == blockType::BUSHES)))
   //  _z++;
@@ -129,8 +123,18 @@ void tank::move()
   this->setMatrix(mT);
 }
 
-projectile::projectile(int x, int y, int z, direction dir, std::string texPath)
-  : tile(x, y, z, texPath), _dir(dir), _x(x), _z(z), _clb(new projectileCallback)
+void tank::shoot()
+{
+  if (_projectile == nullptr)
+  {
+    _projectile = new projectile(_x + 4, 0, _z + 4, _curDir, "projectile/" + _texDir + ".png", this);
+    this->getParent(0)->addChild(_projectile);
+    _projectile->setName(this->getName() + " - projectile");
+  }
+}
+
+projectile::projectile(int x, int y, int z, direction dir, std::string texPath, tank* tnk)
+  : tile(x, y, z, texPath), _dir(dir), _x(x), _z(z), _clb(new projectileCallback), _tank(tnk)
 {
   this->setDataVariance(osg::Object::DYNAMIC);
   this->setUpdateCallback(_clb);
@@ -138,9 +142,11 @@ projectile::projectile(int x, int y, int z, direction dir, std::string texPath)
   {
     case(direction::UP) :
     {
-      move = [this]
+      _collisionPt = { (_x + 4) / 8, (_z + 8) / 8 };
+      moving = [this]
       {
         _z += 4;
+        _collisionPt[1] = (_z + 8) / 8;
         mT.makeTranslate(_x, 0, _z);
         this->setMatrix(mT);
       };
@@ -148,9 +154,11 @@ projectile::projectile(int x, int y, int z, direction dir, std::string texPath)
     }
     case(direction::DOWN) :
     {
-      move = [this]
+      _collisionPt = { (_x + 4) / 8, (_z) / 8 };
+      moving = [this]
       {
         _z -= 4;
+        _collisionPt[1] = (_z) / 8;
         mT.makeTranslate(_x, 0, _z);
         this->setMatrix(mT);
       };
@@ -158,9 +166,11 @@ projectile::projectile(int x, int y, int z, direction dir, std::string texPath)
     }
     case(direction::LEFT) :
     {
-      move = [this]
+      _collisionPt = { (_x) / 8, (_z + 4) / 8 };
+      moving = [this]
       {
         _x -= 4;
+        _collisionPt[0] = (_x) / 8;
         mT.makeTranslate(_x, 0, _z);
         this->setMatrix(mT);
       };
@@ -168,14 +178,42 @@ projectile::projectile(int x, int y, int z, direction dir, std::string texPath)
     }
     case(direction::RIGHT) :
     {
-      move = [this]
+      _collisionPt = { (_x + 8) / 8, (_z + 4) / 8 };
+      moving = [this]
       {
         _x += 4;
+        _collisionPt[0] = (_x + 8) / 8;
         mT.makeTranslate(_x, 0, _z);
         this->setMatrix(mT);
       };
       break;
     }
+  }
+}
+
+void projectile::move()
+{
+  std::map<osg::Vec2i, blockType>::const_iterator a;
+
+  if ((a = map.find(_collisionPt)) == map.end())
+    moving();
+  else if (((*a).second == blockType::WATER) || ((*a).second == blockType::BUSHES) ||
+    ((*a).second == blockType::ICE))
+    moving();
+  else if ((*a).second == blockType::BRICK)
+  {
+    toDelete.push_back(tileMap[_collisionPt]);
+    map.erase(a);
+
+    toDelete.push_back(this);
+    this->removeUpdateCallback(_clb);
+    _tank->_projectile = nullptr;
+  }
+  else 
+  {
+    toDelete.push_back(this);
+    this->removeUpdateCallback(_clb);
+    _tank->_projectile = nullptr;
   }
 }
 

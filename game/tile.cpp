@@ -25,12 +25,23 @@ tile::tile(int x, int y, int z, std::string texPath)
   _geom->setColorBinding(osg::Geometry::BIND_OVERALL);
   _color->push_back(osg::Vec4(1.f, 1.f, 1.f, 1.f));
 
+  /*_geom->addPrimitiveSet(new osg::DrawArrays(osg::PrimitiveSet::TRIANGLE_FAN, 0, 8));*/
   _geom->addPrimitiveSet(new osg::DrawArrays(osg::PrimitiveSet::QUADS, 0, 4));
 
-  _vertices->push_back(osg::Vec3(0, 0, 0));
-  _vertices->push_back(osg::Vec3(8, 0, 0));
-  _vertices->push_back(osg::Vec3(8, 0, 8));
-  _vertices->push_back(osg::Vec3(0, 0, 8));
+  _vertices->push_back(osg::Vec3(0, 0, 0)); // 1
+  _vertices->push_back(osg::Vec3(8, 0, 0)); // 2
+  _vertices->push_back(osg::Vec3(8, 0, 8)); // 3
+  _vertices->push_back(osg::Vec3(0, 0, 8)); // 4
+
+  //_vertices->push_back(osg::Vec3(0, 8, 0)); // 1
+  //_vertices->push_back(osg::Vec3(8, 8, 0)); // 2
+  //_vertices->push_back(osg::Vec3(8, 8, 8)); // 3
+  //_vertices->push_back(osg::Vec3(0, 8, 8)); // 4
+
+  //_vertices->push_back(osg::Vec3(0, 0, 8)); // 5
+  //_vertices->push_back(osg::Vec3(0, 0, 0)); // 6
+  //_vertices->push_back(osg::Vec3(8, 0, 0)); // 7
+  //_vertices->push_back(osg::Vec3(8, 8, 0)); // 8
   _geom->setVertexArray(_vertices);
 
   _normals->setBinding(osg::Array::BIND_OVERALL);
