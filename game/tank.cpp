@@ -24,6 +24,11 @@ tank::tank(int x, int z, std::string texTankType)
   this->addChild(_ur);
 }
 
+void tank::setEnemy(tank* enemy)
+{
+  _enemyTank = enemy;
+}
+
 void tank::moveTo(direction dir)
 {
   _go = true;
@@ -37,28 +42,37 @@ void tank::stop()
 
 void tank::move()
 {
+  osg::Vec2i cpt1, cpt2;
   switch (_goDir)
   {
     case(direction::UP) :
     {
+      cpt1 = { _x + 1, _z + 16 };
+      cpt2 = { _x + 15, _z + 16 };
       _collisionPt1 = { (_x) / 8, (_z + 16) / 8 };
       _collisionPt2 = { static_cast<int>(ceil((_x + 7) / 8.)), (_z + 16) / 8 };
       break;
     }
     case(direction::DOWN) :
     {
+      cpt1 = { _x + 1, _z };
+      cpt2 = { _x + 15, _z };
       _collisionPt1 = { (_x) / 8, (_z) / 8 };
       _collisionPt2 = { static_cast<int>(ceil((_x + 7) / 8.)), (_z) / 8 };
       break;
     }
     case(direction::LEFT) :
     {
+      cpt1 = { _x, _z + 1 };
+      cpt2 = { _x, _z + 15 };
       _collisionPt1 = { (_x - 1) / 8, (_z + 1) / 8 };
       _collisionPt2 = { (_x - 1) / 8, static_cast<int>(ceil((_z + 8) / 8.)) };
       break;
     }
     case(direction::RIGHT) :
     {
+      cpt1 = { _x + 16, _z + 1 };
+      cpt2 = { _x + 16, _z + 15 };
       _collisionPt1 = { (_x + 15) / 8, (_z + 1) / 8 };
       _collisionPt2 = { (_x + 15) / 8, static_cast<int>(ceil((_z + 8) / 8.)) };
       break;
@@ -68,6 +82,10 @@ void tank::move()
   std::map<osg::Vec2i, blockType>::const_iterator a, b;
 
   if (((a = map.find(_collisionPt1)) == map.end()) && ((b = map.find(_collisionPt2)) == map.end()))
+    if (cpt1[0] <= _enemyTank->_x || cpt1[0] >= _enemyTank->_x + 16 ||
+        cpt1[1] <= _enemyTank->_z || cpt1[1] >= _enemyTank->_z + 16)
+      if (cpt2[0] <= _enemyTank->_x || cpt2[0] >= _enemyTank->_x + 16 ||
+          cpt2[1] <= _enemyTank->_z || cpt2[1] >= _enemyTank->_z + 16)
   {
     if (_goDir == direction::UP)
       _z++;
@@ -127,14 +145,17 @@ void tank::shoot()
 {
   if (_projectile == nullptr)
   {
-    _projectile = new projectile(_x + 4, 0, _z + 4, _curDir, "projectile/" + _texDir + ".png", this);
+    _projectile = new projectile(_x + 4, 0, _z + 4, _curDir, 
+      "projectile/" + _texDir + ".png", this, _enemyTank);
     this->getParent(0)->addChild(_projectile);
     _projectile->setName(this->getName() + " - projectile");
   }
 }
 
-projectile::projectile(int x, int y, int z, direction dir, std::string texPath, tank* tnk)
-  : tile(x, y, z, texPath), _dir(dir), _x(x), _z(z), _clb(new projectileCallback), _tank(tnk)
+projectile::projectile(int x, int y, int z, direction dir, 
+  std::string texPath, tank* parentTank, tank* enemyTank)
+  : tile(x, y, z, texPath), _dir(dir), _x(x), _z(z), _clb(new projectileCallback),
+  _parentTank(parentTank), _enemyTank(enemyTank)
 {
   this->setDataVariance(osg::Object::DYNAMIC);
   this->setUpdateCallback(_clb);
@@ -195,26 +216,44 @@ void projectile::move()
 {
   std::map<osg::Vec2i, blockType>::const_iterator a;
 
-  if ((a = map.find(_collisionPt)) == map.end())
+  if ((a = map.find(_collisionPt)) == map.end()) // если на пути ничего нет
     moving();
-  else if (((*a).second == blockType::WATER) || ((*a).second == blockType::BUSHES) ||
-    ((*a).second == blockType::ICE))
+  else if (((*a).second == blockType::WATER) || // если на пути вода, кусты или лед
+    ((*a).second == blockType::BUSHES) || ((*a).second == blockType::ICE))
     moving();
-  else if ((*a).second == blockType::BRICK)
+  else if ((*a).second == blockType::BRICK) // если на пути кирпич (разрушаемое)
   {
+    // уничтожаем блок
     toDelete.push_back(tileMap[_collisionPt]);
     map.erase(a);
-
+    // уничтожаем снаряд
     toDelete.push_back(this);
     this->removeUpdateCallback(_clb);
-    _tank->_projectile = nullptr;
+    _parentTank->_projectile = nullptr;
   }
-  else 
+  else // если на пути граница уровня или броня (неразрушаемое)
   {
+    // уничтожаем снаряд
     toDelete.push_back(this);
     this->removeUpdateCallback(_clb);
-    _tank->_projectile = nullptr;
+    _parentTank->_projectile = nullptr;
   }
+
+  if (_z+4 >= _enemyTank->_z && _z+4 <= _enemyTank->_z + 16)
+    if (_x+4 >= _enemyTank->_x && _x+4 <= _enemyTank->_x + 16) // есть попадание
+    {
+      // уничтожаем снаряд
+      //toDelete.push_back(this);
+      this->removeUpdateCallback(_clb);
+      //_parentTank->_projectile = nullptr;
+      // уничтожаем танк
+      //toDelete.push_back(_enemyTank);
+      _enemyTank->removeUpdateCallback(_enemyTank->_clb);
+      // останавливаем игру
+      _parentTank->removeUpdateCallback(_parentTank->_clb);
+      if (_enemyTank->_projectile != nullptr)
+        _enemyTank->_projectile->removeUpdateCallback(_enemyTank->_projectile->_clb);
+    }
 }
 
 void projectileCallback::operator()(osg::Node* nd, osg::NodeVisitor* ndv)

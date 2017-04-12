@@ -24,9 +24,4 @@ private:
   osg::ref_ptr<tank> _p2Tank;
   std::map<int, bool> _pressedKeysP1;
   std::map<int, bool> _pressedKeysP2;
-  //std::map<std::string, bool> _pressedKeysSecondPlayer = { // переделать под коды клавиш
-  //  { "UpArow", false }, // UpArow
-  //  { "DownArrow", false }, // DownArrow
-  //  { "LeftArrow", false }, // LeftArrow
-  //  { "RightArrow", false } }; // RightArrow
 };

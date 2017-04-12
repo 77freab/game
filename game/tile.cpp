@@ -5,7 +5,7 @@ void tile::setTexture(std::string texPath)
 {
   _image = osgDB::readImageFile("./Resources/" + texPath);
   _texture->setImage(_image);
-  _texture->setWrap(osg::Texture2D::WRAP_S, osg::Texture2D::REPEAT);
+  _texture->setWrap(osg::Texture2D::WRAP_S, osg::Texture2D::CLAMP_TO_EDGE);
   _texture->setFilter(osg::Texture2D::MAG_FILTER, osg::Texture2D::NEAREST);
   osg::StateSet* state = _geom->getOrCreateStateSet();
   state->setTextureAttributeAndModes(0, _texture);

@@ -95,11 +95,15 @@ void createMap(osg::ref_ptr<osg::Group> scene)
       map[{x, z}] = blockType::BORDER; // справа
   }
 
+  std::map<osg::Vec2i, blockType>::const_iterator a;
   for (int x = 0; x < MAP_X_SIZE; x++)
     for (int z = 0; z < MAP_Z_SIZE; z++)
-      if (map.find({ x, z }) != map.end())
+      if ((a = map.find({ x, z })) != map.end())
       {
         tileMap[{ x, z }] = new tile(x * 8, 0, z * 8, blockTex[map[{x, z}]]);
+        //tileMap[{ x, z }]->setDataVariance(osg::Object::STATIC);
+        //if (((*a).second == blockType::BORDER) || ((*a).second == blockType::ARMOR))
+        //  tileMap[{ x, z }]->setCullingActive(false);
         scene->addChild(tileMap[{ x, z }]);
       }
 }

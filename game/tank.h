@@ -30,14 +30,16 @@ class tank;
 class projectile : public tile
 {
 public:
-  projectile(int x, int y, int z, direction, std::string texPath, tank* tnk);
+  projectile(int x, int y, int z, direction, 
+    std::string texPath, tank* parentTank, tank* enemyTank);
   std::function<void()> moving;
   void move();
 private:
   direction _dir;
   osg::Matrix mT;
   osg::Vec2i _collisionPt;
-  tank* _tank;
+  tank* _parentTank;
+  tank* _enemyTank;
   int _x;
   int _z;
   osg::ref_ptr<projectileCallback> _clb;
@@ -53,6 +55,11 @@ public:
   void shoot();
   bool _go = false;
   osg::ref_ptr<projectile> _projectile = nullptr;
+  int _x;
+  int _z;
+  void setEnemy(tank* enemy);
+  tank* _enemyTank;
+  osg::ref_ptr<tankCallback> _clb;
 private:
   osg::ref_ptr<tile> _dl;
   osg::ref_ptr<tile> _dr;
@@ -62,12 +69,9 @@ private:
   osg::Vec2i _collisionPt2;
   const int _x0;
   const int _z0;
-  int _x;
-  int _z;
   direction _goDir = direction::UP;
   direction _curDir = direction::UP;
   std::string _texDir = "UP";
   std::string _texTankType;
   std::string _texChassis = "_C1/";
-  osg::ref_ptr<tankCallback> _clb;
 };

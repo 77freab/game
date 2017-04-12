@@ -1,16 +1,43 @@
 #include "viewer.h"
 #include <osgGA/TrackballManipulator>
+#include <osgViewer/ViewerEventHandlers>
 #include <list>
+#include <osgUtil/Optimizer>
 
 std::list<osg::Node*> toDelete;
 
 viewerThread::viewerThread()
   : _viewer(new osgViewer::Viewer)
 {
-  _scene = createScene();
+  osgUtil::Optimizer opt; // ALL_OPTIMIZATIONS
+  _scene = createScene(); //DEFAULT_OPTIMIZATIONS
+  opt.optimize(_scene, 
+    osgUtil::Optimizer::FLATTEN_STATIC_TRANSFORMS |
+    osgUtil::Optimizer::REMOVE_REDUNDANT_NODES |
+    osgUtil::Optimizer::REMOVE_LOADED_PROXY_NODES |
+    osgUtil::Optimizer::COMBINE_ADJACENT_LODS |
+    osgUtil::Optimizer::SHARE_DUPLICATE_STATE |
+    osgUtil::Optimizer::MERGE_GEOMETRY |
+    osgUtil::Optimizer::CHECK_GEOMETRY |
+    osgUtil::Optimizer::MAKE_FAST_GEOMETRY |
+    osgUtil::Optimizer::SPATIALIZE_GROUPS |
+    osgUtil::Optimizer::COPY_SHARED_NODES |
+    //osgUtil::Optimizer::TRISTRIP_GEOMETRY | // разделяет на triangle strips
+    osgUtil::Optimizer::TESSELLATE_GEOMETRY |
+    osgUtil::Optimizer::OPTIMIZE_TEXTURE_SETTINGS |
+    osgUtil::Optimizer::MERGE_GEODES |
+    osgUtil::Optimizer::FLATTEN_BILLBOARDS |
+    //osgUtil::Optimizer::TEXTURE_ATLAS_BUILDER | // текстуры танков артефачат
+    osgUtil::Optimizer::STATIC_OBJECT_DETECTION |
+    osgUtil::Optimizer::FLATTEN_STATIC_TRANSFORMS_DUPLICATING_SHARED_SUBGRAPHS |
+    //osgUtil::Optimizer::INDEX_MESH | // разделяет на triangles
+    osgUtil::Optimizer::VERTEX_POSTTRANSFORM |
+    osgUtil::Optimizer::VERTEX_PRETRANSFORM
+    );
   _viewer->setUpViewInWindow(200, 400, 800, 700);
   _viewer->addEventHandler(this);
   _viewer->setSceneData(_scene);
+  //_viewer->getCamera()->setCullingMode(0); // +3 fps !!!11
   _viewer->getCamera()->setClearColor(osg::Vec4(0, 0, 0, 1));
   _viewer->getCamera()->
     setViewMatrixAsLookAt({ 128, -440, 112 }, { 128, 0, 112 }, { 0, 0, 1 });
@@ -33,7 +60,7 @@ void viewerThread::run()
     }
   }
   //_viewer->run();
-  emit closeGUI();
+  //emit closeGUI();
 }
 
 void viewerThread::close()
@@ -53,6 +80,8 @@ osg::ref_ptr<osg::Group> viewerThread::createScene()
   _p2Tank = new tank(144, 200, "green/T1_");
   scene->addChild(_p2Tank);
   _p2Tank->setName(scene->getName() + " - 2nd player tank");
+  _p1Tank->setEnemy(_p2Tank.get());
+  _p2Tank->setEnemy(_p1Tank.get());
   return scene;
 }
 
